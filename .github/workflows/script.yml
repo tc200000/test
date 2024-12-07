@@ -1,9 +1,7 @@
 name: Run Script on Push
 
 on:
-  push:
-    branches:
-      - main  # Запускати тільки при пуші в гілку main
+  workflow_dispatch:
 
 jobs:
   run-script:
