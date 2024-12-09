@@ -17,7 +17,7 @@ locals {
 }
 
 source "amazon-ebs" "ubuntu" {
-  ami_name      = "nginxHelloWorld"
+  ami_name      = "wpTest"
   instance_type = "t2.micro"
   region        = "eu-central-1"
   security_group_id = "sg-09c59443e4e37de04"
