@@ -55,7 +55,7 @@ build {
     ]
   }
   provisioner "ansible" {
-    playbool_file = "../ansible/playbook.yml"
+    playbook_file = "../ansible/playbook.yml"
     extra_arguments = ["--extra-vars", "ansible_python_interpreter=/usr/bin/python3"]
   }
 }
