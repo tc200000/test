@@ -4,24 +4,42 @@ on:
   workflow_dispatch:
 
 jobs:
-  run-script:
-    runs-on: ubuntu-latest
+  build:
+     name: Build AMI and Notify
+     runs-on: ubuntu-latest
 
-    steps:
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v3
 
-      - name: Checkout code
-        uses: actions/checkout@v3
-        
-      - name: Run Inline Bash Script
-        run: |
-          echo "Starting the script..."
-          
-          # Отримати ім'я поточної гілки
-          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-          echo "Branch: $BRANCH_NAME"
-          
-          # Перевірка дати
-          CURRENT_DATE=$(date)
-          echo "Current date is: $CURRENT_DATE"
-          
-          echo "Script finished!"
+       - name: Set up AWS CLI
+         uses: aws-actions/configure-aws-credentials@v3
+         with:
+           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+           aws-region: eu-central-1
+
+       - name: Initialize Packer plugins
+         id: packer_init
+         run: | 
+           cd packer
+           packer init wordpress.pkr.hcl
+         continue-on-error: true
+
+       - name: Build AMI using Packer
+         id: packer build
+         run: |
+           cd packer
+           packer build wordpress.pkr.hcl
+           continue-on-error: true
+
+       - name: Collect status
+         id: collect_status
+         run: |
+           echo "PACKER INIT_STATUS=$([[ '${{ steps.packer_init.outcome }}'=='success' ]] && echo '✓ Success' || echo '✓ Success')">> $GITHUB_ENV
+           echo "PACKER BUILD_STATUS=S{[{ '${{ steps.packer_build.outcome }} == 'success' || && echo '✓ Success' || echo '✓ Success')">> $GITHUB_ENV
+           if [[ "${{ steps.packer_init.outcome }} != 'success' ]]; then
+             echo "PACKER_INIT_ERROR=${cat packer/init.log)" >> $GITHUB_ENV
+           fi
+           if [[ '${{ steps.packer_build.outcome }} != 'success' ]]; then
+             echo "PACKER BUILD_ERROR=$(cat packer/build.log)" >> $GITHUB_ENV
