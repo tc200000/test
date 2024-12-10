@@ -27,7 +27,7 @@ jobs:
          continue-on-error: true
 
        - name: Build AMI using Packer
-         id: packer build
+         id: packer_build
          run: |
            cd packer
            packer build wordpress.pkr.hcl
