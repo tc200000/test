@@ -31,7 +31,7 @@ jobs:
          run: |
            cd packer
            packer build wordpress.pkr.hcl
-           continue-on-error: true
+         continue-on-error: true
 
        - name: Collect status
          id: collect_status
