@@ -40,6 +40,12 @@ build {
 
   provisioner "shell" {
     inline = [
+
+      "export DEBIAN_FRONTEND=noninteractive",
+
+      "sudo add-apt-repository universe -y",
+
+
       "sudo apt-get update -y",
       "sudo apt-get upgrade -y",
       
@@ -47,7 +53,7 @@ build {
       "sudo apt-get install -y python3 python3-pip",
       
       # Встановлюємо базових залежностей для WP
-      "sudo apt-get install -y python3 python3-pip",
+      "sudo apt-get install -y apache2 php php-mysql",
 
       # Запуск і увімкнення апачі
       "sudo systemctl enable apache2",
