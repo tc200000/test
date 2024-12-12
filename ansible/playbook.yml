@@ -1,15 +1,29 @@
 - name: Configure WordPress server
   hosts: all
   become: true
+
   vars:
     ansible_python_interpreter: /usr/bin/python3
-  
+
   tasks:
     - name: Update and upgrade system
       apt:
         update_cache: yes
         upgrade: dist
 
+    - name: Set MySQL root password
+      debconf:
+        name: mysql-server
+        question: mysql-server/root_password
+        value: your_strong_password
+        vtype: password
+
+    - name: Confirm MySQL root password
+      debconf:
+        name: mysql-server
+        question: mysql-server/root_password_again
+        value: your_strong_password
+        vtype: password
 
     - name: Install Python MySQL dependencies
       apt:
@@ -31,6 +45,10 @@
         - libapache2-mod-php
         - unzip
 
+    - name: Update MySQL authentication method
+      command: >
+        mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_strong_password'; FLUSH PRIVILEGES;"
+
     - name: Configure MySQL
       mysql_user:
         name: wp_user
@@ -38,11 +56,15 @@
         priv: 'wordpress.*:ALL'
         host: localhost
         state: present
+      login_user: root
+      login_password: your_strong_password
 
     - name: Create WordPress database
       mysql_db:
         name: wordpress
         state: present
+      login_user: root
+      login_password: your_strong_password"
 
     - name: Download WordPress
       get_url:
@@ -72,5 +94,3 @@
       with_items:
         - apache2
         - mysql
-  
-  
