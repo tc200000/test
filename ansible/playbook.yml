@@ -3,19 +3,65 @@
   become: true
   vars:
     ansible_python_interpreter: /usr/bin/python3
+  
   tasks:
-    - name: Ensure Apache and PHP are installed
+    - name: Update and upgrade system
+      apt:
+        update_cache: yes
+        upgrade: dist
+
+    - name: Install LAMP stack
       apt:
         name: "{{ item }}"
         state: present
-        update_cache: yes
-      loop:
+      with_items:
         - apache2
+        - mysql-server
         - php
         - php-mysql
-        
-    - name: Start and enable Apache
+        - libapache2-mod-php
+        - unzip
+
+    - name: Configure MySQL
+      mysql_user:
+        name: wp_user
+        password: strong_password
+        priv: 'wordpress.*:ALL'
+        host: localhost
+        state: present
+
+    - name: Create WordPress database
+      mysql_db:
+        name: wordpress
+        state: present
+
+    - name: Download WordPress
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /tmp/latest.tar.gz
+
+    - name: Extract WordPress
+      unarchive:
+        src: /tmp/latest.tar.gz
+        dest: /var/www/html
+        remote_src: yes
+
+    - name: Set permissions for WordPress
+      file:
+        path: /var/www/html/wordpress
+        state: directory
+        owner: www-data
+        group: www-data
+        mode: '0755'
+        recurse: yes
+
+    - name: Enable Apache and MySQL
       systemd:
-        name: apache2
-        state: started
+        name: "{{ item }}"
         enabled: yes
+        state: started
+      with_items:
+        - apache2
+        - mysql
+  
+  
