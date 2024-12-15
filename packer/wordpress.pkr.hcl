@@ -42,28 +42,16 @@ build {
     inline = [
 
       "export DEBIAN_FRONTEND=noninteractive",
-
       "sudo add-apt-repository universe -y",
 
-
       "sudo apt-get update -y",
-      "sudo apt-get upgrade -y",
+      "sudo apt-get upgrade -y"
       
-      # Встановлюємо пайтон і необхідні можуді для ансібла
-      "sudo apt-get install -y python3 python3-pip",
-      
-      # Встановлюємо базових залежностей для WP
-      "sudo apt-get install -y apache2 php php-mysql",
-
-      # Запуск і увімкнення апачі
-      "sudo systemctl enable apache2",
-      "sudo systemctl start apache2"
     ]
   }
   provisioner "ansible" {
     playbook_file = "../ansible/playbook.yml"
-    extra_arguments = ["--extra-vars", "ansible_python_interpreter=/usr/bin/python3"]
-  }
+    }
 }
 
 
