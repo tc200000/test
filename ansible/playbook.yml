@@ -42,10 +42,14 @@
       command: >
         mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_strong_password'; FLUSH PRIVILEGES;"
 
-    - name: Configure MySQL user and database
+    - name: Configure MySQL database
       mysql_db:
         name: wordpress
         state: present
+      login_user: root
+      login_password: your_strong_password
+
+    - name: Configure MySQL user
       mysql_user:
         name: wp_user
         password: strong_password
