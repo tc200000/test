@@ -1,4 +1,4 @@
-- name: Configure WordPress server
+- name: Configure WordPress AMI
   hosts: all
   become: true
 
@@ -25,15 +25,7 @@
         value: your_strong_password
         vtype: password
 
-    - name: Install Python MySQL dependencies
-      apt:
-        name: "{{ item }}"
-        state: present
-      with_items:
-        - python3-pymysql
-        - python3-mysqldb   
-
-    - name: Install LAMP stack
+    - name: Install LAMP stack and dependencies
       apt:
         name: "{{ item }}"
         state: present
@@ -44,27 +36,24 @@
         - php-mysql
         - libapache2-mod-php
         - unzip
+        - python3-pymysql
 
     - name: Update MySQL authentication method
       command: >
         mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_strong_password'; FLUSH PRIVILEGES;"
 
-    - name: Configure MySQL
+    - name: Configure MySQL user and database
+      mysql_db:
+        name: wordpress
+        state: present
       mysql_user:
         name: wp_user
         password: strong_password
-        priv: 'wordpress.*:ALL'
+        priv: "wordpress.*:ALL"
         host: localhost
         state: present
       login_user: root
       login_password: your_strong_password
-
-    - name: Create WordPress database
-      mysql_db:
-        name: wordpress
-        state: present
-      login_user: root
-      login_password: your_strong_password"
 
     - name: Download WordPress
       get_url:
