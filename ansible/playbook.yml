@@ -4,6 +4,10 @@
 
   vars:
     ansible_python_interpreter: /usr/bin/python3
+    mysql_root_password: "your_strong_password"
+    wordpress_db_user: "wp_user"
+    wordpress_db_password: "strong_password"
+    wordpress_db_name: "wordpress"
 
   tasks:
     - name: Update and upgrade system
@@ -15,14 +19,14 @@
       debconf:
         name: mysql-server
         question: mysql-server/root_password
-        value: your_strong_password
+        value: "{{ mysql_root_password }}"
         vtype: password
 
     - name: Confirm MySQL root password
       debconf:
         name: mysql-server
         question: mysql-server/root_password_again
-        value: your_strong_password
+        value: "{{ mysql_root_password }}"
         vtype: password
 
     - name: Install LAMP stack and dependencies
@@ -39,25 +43,30 @@
         - python3-pymysql
 
     - name: Update MySQL authentication method
-      command: >
-        mysql -u root --execute="ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'your_strong_password'; FLUSH PRIVILEGES;"
+      mysql_user:
+        name: root
+        host: localhost
+        password: "{{ mysql_root_password }}"
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+        auth_plugin: mysql_native_password
 
     - name: Configure MySQL database
       mysql_db:
-        name: wordpress
+        name: "{{ wordpress_db_name }}"
         state: present
       login_user: root
-      login_password: your_strong_password
+      login_password: "{{ mysql_root_password }}"
 
     - name: Configure MySQL user
       mysql_user:
-        name: wp_user
-        password: strong_password
-        priv: "wordpress.*:ALL"
+        name: "{{ wordpress_db_user }}"
+        password: "{{ wordpress_db_password }}"
+        priv: "{{ wordpress_db_name }}.*:ALL"
         host: localhost
         state: present
       login_user: root
-      login_password: your_strong_password
+      login_password: "{{ mysql_root_password }}"
 
     - name: Download WordPress
       get_url:
@@ -87,3 +96,26 @@
       with_items:
         - apache2
         - mysql
+
+    - name: Create Apache virtual host for WordPress
+      copy:
+        dest: /etc/apache2/sites-available/wordpress.conf
+        content: |
+          <VirtualHost *:80>
+              ServerName wordpress.local
+              DocumentRoot /var/www/html/wordpress
+              <Directory /var/www/html/wordpress>
+                  AllowOverride All
+              </Directory>
+          </VirtualHost>
+
+    - name: Enable WordPress site
+      command: a2ensite wordpress
+
+    - name: Enable Apache rewrite module
+      command: a2enmod rewrite
+
+    - name: Restart Apache
+      systemd:
+        name: apache2
+        state: restarted
