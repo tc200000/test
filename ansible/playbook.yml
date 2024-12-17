@@ -1,145 +1,85 @@
-
-   ---
-- hosts: all
+---
+- name: Install WordPress on Ubuntu 24.04
+  hosts: all
   become: true
-  vars_files:
-    - vars/default.yml
-
+  vars:
+    wp_db_name: wordpress_db
+    wp_db_user: wp_user
+    wp_db_password: your_secure_password
+    wp_site_url: http://your-server-ip
   tasks:
-    - name: Install prerequisites
-      apt: name=aptitude update_cache=yes state=latest force_apt_get=yes
-      tags: [ system ]
 
-    - name: Install LAMP Packages
-      apt: name={{ item }} update_cache=yes state=latest
-      loop: [ 'apache2', 'mysql-server', 'python3-pymysql', 'php', 'php-mysql', 'libapache2-mod-php' ]
-      tags: [ system ]
+    - name: Install required packages
+      apt:
+        name:
+          - apache2
+          - mysql-server
+          - php
+          - php-mysql
+          - libapache2-mod-php
+          - unzip
+          - curl
+        update_cache: yes
 
-    - name: Install PHP Extensions
-      apt: name={{ item }} update_cache=yes state=latest
-      loop: "{{ php_modules }}"
-      tags: [ system ]
+    - name: Start Apache and MySQL services
+      service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+      loop:
+        - apache2
+        - mysql
 
-  # Apache Configuration
-    - name: Create document root
-      file:
-        path: "/var/www/{{ http_host }}"
-        state: directory
-        owner: "www-data"
-        group: "www-data"
-        mode: '0755'
-      tags: [ apache ]
-
-    - name: Set up Apache VirtualHost
-      template:
-        src: "files/apache.conf.j2"
-        dest: "/etc/apache2/sites-available/{{ http_conf }}"
-      notify: Reload Apache
-      tags: [ apache ]
-
-    - name: Enable rewrite module
-      shell: /usr/sbin/a2enmod rewrite
-      notify: Reload Apache
-      tags: [ apache ]
-
-    - name: Enable new site
-      shell: /usr/sbin/a2ensite {{ http_conf }}
-      notify: Reload Apache
-      tags: [ apache ]
-
-    - name: Disable default Apache site
-      shell: /usr/sbin/a2dissite 000-default.conf
-      notify: Restart Apache
-      tags: [ apache ]
-
-  # MySQL Configuration
-    - name: Set the root password
+    - name: Secure MySQL installation
       mysql_user:
         name: root
-        password: "{{ mysql_root_password }}"
-        login_unix_socket: /var/run/mysqld/mysqld.sock
-      tags: [ mysql, mysql-root ]
+        host: localhost
+        password: root_password
+      ignore_errors: yes
 
-    - name: Remove all anonymous user accounts
-      mysql_user:
-        name: ''
-        host_all: yes
-        state: absent
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-      tags: [ mysql ]
-
-    - name: Remove the MySQL test database
+    - name: Create MySQL database for WordPress
       mysql_db:
-        name: test
-        state: absent
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-      tags: [ mysql ]
-
-    - name: Creates database for WordPress
-      mysql_db:
-        name: "{{ mysql_db }}"
+        name: "{{ wp_db_name }}"
         state: present
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-      tags: [ mysql ]
 
     - name: Create MySQL user for WordPress
       mysql_user:
-        name: "{{ mysql_user }}"
-        password: "{{ mysql_password }}"
-        priv: "{{ mysql_db }}.*:ALL"
+        name: "{{ wp_db_user }}"
+        password: "{{ wp_db_password }}"
+        priv: "{{ wp_db_name }}.*:ALL"
         state: present
-        login_user: root
-        login_password: "{{ mysql_root_password }}"
-      tags: [ mysql ]
 
-  # UFW Configuration
-    - name: "UFW - Allow HTTP on port {{ http_port }}"
-      ufw:
-        rule: allow
-        port: "{{ http_port }}"
-        proto: tcp
-      tags: [ system ]
+    - name: Download WordPress
+      get_url:
+        url: https://wordpress.org/latest.zip
+        dest: /tmp/wordpress.zip
 
-  # WordPress Configuration
-    - name: Download and unpack latest WordPress
+    - name: Unzip WordPress
       unarchive:
-        src: https://wordpress.org/latest.tar.gz
-        dest: "/var/www/{{ http_host }}"
+        src: /tmp/wordpress.zip
+        dest: /var/www/html/
         remote_src: yes
-        creates: "/var/www/{{ http_host }}/wordpress"
-      tags: [ wordpress ]
 
-    - name: Set ownership
+    - name: Set permissions for WordPress directory
       file:
-        path: "/var/www/{{ http_host }}"
+        path: /var/www/html/wordpress
         state: directory
-        recurse: yes
         owner: www-data
         group: www-data
-      tags: [ wordpress ]
+        recurse: yes
 
-    - name: Set permissions for directories
-      shell: "/usr/bin/find /var/www/{{ http_host }}/wordpress/ -type d -exec chmod 750 {} \\;"
-      tags: [ wordpress ]
+    - name: Copy WordPress config file
+      command: cp /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php
 
-    - name: Set permissions for files
-      shell: "/usr/bin/find /var/www/{{ http_host }}/wordpress/ -type f -exec chmod 640 {} \\;"
-      tags: [ wordpress ]
-
-    - name: Set up wp-config
-      template:
-        src: "files/wp-config.php.j2"
-        dest: "/var/www/{{ http_host }}/wordpress/wp-config.php"
-      tags: [ wordpress ]
-
-  handlers:
-    - name: Reload Apache
-      service:
-        name: apache2
-        state: reloaded
+    - name: Update WordPress config file
+      replace:
+        path: /var/www/html/wordpress/wp-config.php
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace }}"
+      loop:
+        - { regexp: 'database_name_here', replace: '{{ wp_db_name }}' }
+        - { regexp: 'username_here', replace: '{{ wp_db_user }}' }
+        - { regexp: 'password_here', replace: '{{ wp_db_password }}' }
 
     - name: Restart Apache
       service:
