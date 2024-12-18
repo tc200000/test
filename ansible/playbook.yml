@@ -55,10 +55,9 @@
       vars:
         mysql_root_password: "strongpassword"
 
-    # Зміна автентифікації для root на mysql_native_password
     - name: Change root authentication to mysql_native_password
       shell: |
-        sudo mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '{{ mysql_root_password }}';"
+        sudo mysql -u root --skip-grant-tables -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY 'strongpassword';"
         sudo mysql -e "FLUSH PRIVILEGES;"
       vars:
         mysql_root_password: "strongpassword"
