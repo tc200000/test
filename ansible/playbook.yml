@@ -1,35 +1,27 @@
-- name: Install WordPress on Ubuntu 24.04
-  hosts: all
+- hosts: all
   become: true
-  vars:
-    wp_db_name: wordpress_db
-    wp_db_user: wp_user
-    wp_db_password: your_secure_password
-    wp_site_url: http://your-server-ip
   tasks:
-
-
-
-
-
-    - name: Install Python MySQL modules
+    - name: Update and upgrade apt packages
       apt:
-        name: python3-mysqlclient
-        state: present
+        update_cache: yes
+        upgrade: dist
 
-    - name: Install required packages
+    - name: Install Apache, MySQL, PHP and required extensions
       apt:
         name:
           - apache2
           - mysql-server
           - php
           - php-mysql
-          - libapache2-mod-php
+          - php-curl
+          - php-gd
+          - php-mbstring
+          - php-xml
+          - php-xmlrpc
           - unzip
-          - curl
-        update_cache: yes
+        state: present
 
-    - name: Start Apache and MySQL services
+    - name: Enable Apache and MySQL services
       service:
         name: "{{ item }}"
         state: started
@@ -38,58 +30,24 @@
         - apache2
         - mysql
 
-    - name: Secure MySQL installation
-      mysql_user:
-        name: root
-        host: localhost
-        password: root_password
-      ignore_errors: yes
+    - name: Secure MySQL Installation
+      shell: |
+        mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '{{ mysql_root_password }}';"
+        mysql -e "DELETE FROM mysql.user WHERE User='';"
+        mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
+        mysql -e "FLUSH PRIVILEGES;"
+      vars:
+        mysql_root_password: "strongpassword"
 
-    - name: Create MySQL database for WordPress
+    - name: Create a MySQL Database and User for WordPress
       mysql_db:
-        name: "{{ wp_db_name }}"
+        name: wordpress
         state: present
 
-    - name: Create MySQL user for WordPress
+    - name: Create a MySQL User for WordPress
       mysql_user:
-        name: "{{ wp_db_user }}"
-        password: "{{ wp_db_password }}"
-        priv: "{{ wp_db_name }}.*:ALL"
+        name: wp_user
+        password: wp_password
+        priv: 'wordpress.*:ALL'
+        host: "%"
         state: present
-
-    - name: Download WordPress
-      get_url:
-        url: https://wordpress.org/latest.zip
-        dest: /tmp/wordpress.zip
-
-    - name: Unzip WordPress
-      unarchive:
-        src: /tmp/wordpress.zip
-        dest: /var/www/html/
-        remote_src: yes
-
-    - name: Set permissions for WordPress directory
-      file:
-        path: /var/www/html/wordpress
-        state: directory
-        owner: www-data
-        group: www-data
-        recurse: yes
-
-    - name: Copy WordPress config file
-      command: cp /var/www/html/wordpress/wp-config-sample.php /var/www/html/wordpress/wp-config.php
-
-    - name: Update WordPress config file
-      replace:
-        path: /var/www/html/wordpress/wp-config.php
-        regexp: "{{ item.regexp }}"
-        replace: "{{ item.replace }}"
-      loop:
-        - { regexp: 'database_name_here', replace: '{{ wp_db_name }}' }
-        - { regexp: 'username_here', replace: '{{ wp_db_user }}' }
-        - { regexp: 'password_here', replace: '{{ wp_db_password }}' }
-
-    - name: Restart Apache
-      service:
-        name: apache2
-        state: restarted
