@@ -8,6 +8,15 @@
     wp_site_url: http://your-server-ip
   tasks:
 
+
+
+
+
+    - name: Install Python MySQL modules
+      apt:
+        name: python3-mysqlclient
+        state: present
+
     - name: Install required packages
       apt:
         name:
