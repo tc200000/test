@@ -32,6 +32,7 @@
 
     - name: Secure MySQL Installation
       shell: |
+        sudo mysql -u root -p
         sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '{{ mysql_root_password }}';"
         sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
         sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
