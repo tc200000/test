@@ -1,14 +1,15 @@
 - hosts: all
   become: true
-
-  
-
   tasks:
+
+    # Оновлення та оновлення системи
     - name: Update and upgrade apt packages
       apt:
         update_cache: yes
-        upgrade: dist
+        upgrade: yes
+        cache_valid_time: 3600
 
+    # Встановлення Apache, MySQL, PHP та необхідних розширень
     - name: Install Apache, MySQL, PHP and required extensions
       apt:
         name:
@@ -16,34 +17,46 @@
           - mysql-server
           - php
           - php-mysql
+          - libapache2-mod-php
           - php-curl
-          - php-gd
-          - php-mbstring
           - php-xml
-          - php-xmlrpc
-          - unzip
+          - php-zip
         state: present
+        update_cache: yes
 
+    # Увімкнення Apache та MySQL
     - name: Enable Apache and MySQL services
       service:
         name: "{{ item }}"
         state: started
-        enabled: true
+        enabled: yes
       loop:
         - apache2
         - mysql
 
+    # Встановлення Python модуля для MySQL
     - name: Install required Python MySQL module
-      apt:
-        name: python3-pymysql
+      pip:
+        name: pymysql
         state: present
-   
-       
-    - name: Create a MySQL Database and User for WordPress
+
+    # Безпека MySQL: задаємо пароль для root
+    - name: Secure MySQL Installation
+      shell: |
+        sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '{{ mysql_root_password }}';"
+        sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
+        sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
+        sudo mysql -e "FLUSH PRIVILEGES;"
+      vars:
+        mysql_root_password: "strongpassword"
+
+    # Створення бази даних для WordPress
+    - name: Create a MySQL Database for WordPress
       mysql_db:
         name: wordpress
         state: present
 
+    # Створення користувача для WordPress з доступом до бази даних
     - name: Create a MySQL User for WordPress
       mysql_user:
         name: wp_user
