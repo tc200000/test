@@ -1,4 +1,3 @@
----
 - name: Install WordPress on Ubuntu 24.04
   hosts: all
   become: true
