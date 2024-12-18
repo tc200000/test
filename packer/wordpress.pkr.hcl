@@ -47,7 +47,7 @@ build {
       "sudo apt-get update -y",
       "sudo apt-get upgrade -y",
       
-    "sudo apt install -y python3-mysql.connector"
+      "sudo apt install -y python3-mysql.connector"
       
     ]
   }
