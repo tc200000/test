@@ -2,6 +2,7 @@
   become: true
   tasks:
 
+
     # Оновлення та оновлення системи
     - name: Update and upgrade apt packages
       apt:
@@ -34,6 +35,12 @@
         - apache2
         - mysql
 
+    # Встановлення pip3, якщо він відсутній
+    - name: Install pip3
+      apt:
+        name: python3-pip
+        state: present
+
     # Встановлення Python модуля для MySQL
     - name: Install required Python MySQL module
       pip:
@@ -63,4 +70,4 @@
         password: wp_password
         priv: 'wordpress.*:ALL'
         host: "%"
-        state: present
+        state: present    
