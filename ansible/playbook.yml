@@ -2,7 +2,6 @@
   become: true
   tasks:
 
-
     # Оновлення та оновлення системи
     - name: Update and upgrade apt packages
       apt:
@@ -46,20 +45,6 @@
       pip:
         name: pymysql
         state: present
-
-
-
-
-    - name: Secure MySQL Installation
-      shell: |
-        sudo mysql -e "UPDATE mysql.user SET authentication_string=PASSWORD('{{ mysql_root_password }}') WHERE User='root';"
-        sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
-        sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
-        sudo mysql -e "FLUSH PRIVILEGES;"
-      vars:
-        mysql_root_password: "strongpassword"
-
-
 
     # Безпека MySQL: задаємо пароль для root
     - name: Secure MySQL Installation
