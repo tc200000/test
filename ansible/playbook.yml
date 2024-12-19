@@ -118,17 +118,4 @@
         login_user: root
         login_password: "{{ mysql_root_password }}"
 
-Що було додано:
-
-1. Завдання для перезапуску MySQL сервісу після зміни автентифікації root.
-
-
-2. Тест підключення до MySQL для перевірки доступу до бази даних.
-
-
-3. Додавання login_user та login_password у модулі mysql_db та mysql_user.
-
-
-
-Спробуйте цей Playbook і повідомте, чи вдалося вирішити проблему!
 
