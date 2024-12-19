@@ -63,4 +63,72 @@
         group: root
         mode: '0600'
 
-    # Інші завдання...
+
+
+
+
+    # Перевірка та зміна пароля для root в MySQL
+    - name: Secure MySQL Installation
+      shell: |
+        sudo mysql -e "UPDATE mysql.user SET authentication_string=PASSWORD('{{ mysql_root_password }}') WHERE User='root';"
+        sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
+        sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
+        sudo mysql -e "FLUSH PRIVILEGES;"
+      vars:
+        mysql_root_password: "strongpassword"
+
+    - name: Change root authentication to mysql_native_password
+      shell: |
+        sudo mysql -u root --skip-grant-tables -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY 'strongpassword';"
+        sudo mysql -e "FLUSH PRIVILEGES;"
+      vars:
+        mysql_root_password: "strongpassword"
+
+    # Перезапуск MySQL сервісу
+    - name: Restart MySQL service
+      service:
+        name: mysql
+        state: restarted
+
+    # Тест доступу до MySQL
+    - name: Test MySQL connection with root
+      shell: |
+        mysql -u root -p{{ mysql_root_password }} -e "SHOW DATABASES;"
+      register: mysql_test_output
+    - name: Debug MySQL test output
+      debug:
+        var: mysql_test_output
+
+    # Створення бази даних для WordPress
+    - name: Create a MySQL Database for WordPress
+      mysql_db:
+        name: wordpress
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+    # Створення користувача для WordPress з доступом до бази даних
+    - name: Create a MySQL User for WordPress
+      mysql_user:
+        name: wp_user
+        password: wp_password
+        priv: 'wordpress.*:ALL'
+        host: "%"
+        state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
+
+Що було додано:
+
+1. Завдання для перезапуску MySQL сервісу після зміни автентифікації root.
+
+
+2. Тест підключення до MySQL для перевірки доступу до бази даних.
+
+
+3. Додавання login_user та login_password у модулі mysql_db та mysql_user.
+
+
+
+Спробуйте цей Playbook і повідомте, чи вдалося вирішити проблему!
+
