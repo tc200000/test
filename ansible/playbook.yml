@@ -1,8 +1,5 @@
 - hosts: all
   become: true
-  vars:
-    mysql_root_password: "strongpassword"
-
   tasks:
     # Оновлення та оновлення системи
     - name: Update and upgrade apt packages
@@ -48,35 +45,57 @@
         name: pymysql
         state: present
 
-    # Створення файлу з обліковими даними MySQL для root
+    # Створення MySQL credentials файлу для root
     - name: Create MySQL credentials file for root
       copy:
         dest: /root/.my.cnf
         content: |
-          [client]
-          user = root
-          password = "{{ mysql_root_password }}"
-        mode: '0600'
+            [client]
+            user = root
+            password = strongpassword
+      owner: root
+      group: root
+      mode: '0600'
 
-    # Захист MySQL: видалення тестових даних і анонімних користувачів
+    # Перевірка та зміна пароля для root в MySQL
     - name: Secure MySQL Installation
       shell: |
-        mysql -u root -e "UPDATE mysql.user SET authentication_string=PASSWORD('{{ mysql_root_password }}') WHERE User='root';"
-        mysql -u root -e "DELETE FROM mysql.user WHERE User='';"
-        mysql -u root -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
-        mysql -u root -e "FLUSH PRIVILEGES;"
+        sudo mysql -e "UPDATE mysql.user SET authentication_string=PASSWORD('{{ mysql_root_password }}') WHERE User='root';"
+        sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
+        sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
+        sudo mysql -e "FLUSH PRIVILEGES;"
+      vars:
+        mysql_root_password: "strongpassword"
 
-    # Зміна автентифікації root на mysql_native_password
     - name: Change root authentication to mysql_native_password
       shell: |
-        mysql -u root --skip-grant-tables -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY '{{ mysql_root_password }}';"
-        mysql -u root -e "FLUSH PRIVILEGES;"
+        sudo mysql -u root --skip-grant-tables -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY 'strongpassword';"
+        sudo mysql -e "FLUSH PRIVILEGES;"
+      vars:
+        mysql_root_password: "strongpassword"
+
+    # Перезапуск MySQL сервісу
+    - name: Restart MySQL service
+      service:
+        name: mysql
+        state: restarted
+
+    # Тест доступу до MySQL
+    - name: Test MySQL connection with root
+      shell: |
+        mysql -u root -p{{ mysql_root_password }} -e "SHOW DATABASES;"
+      register: mysql_test_output
+    - name: Debug MySQL test output
+      debug:
+        var: mysql_test_output
 
     # Створення бази даних для WordPress
     - name: Create a MySQL Database for WordPress
       mysql_db:
         name: wordpress
         state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
 
     # Створення користувача для WordPress з доступом до бази даних
     - name: Create a MySQL User for WordPress
@@ -86,3 +105,5 @@
         priv: 'wordpress.*:ALL'
         host: "%"
         state: present
+        login_user: root
+        login_password: "{{ mysql_root_password }}"
