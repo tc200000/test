@@ -45,6 +45,27 @@
         name: pymysql
         state: present
 
+   
+    - name: Create MySQL credentials file for root
+      copy:
+        dest: /root/.my.cnf
+        content: |
+            [client]
+            user = root
+            password = strongpassword
+       owner: root
+       group: root
+       mode: '0600'
+
+    - name: Create a MySQL Database for WordPress
+      mysql_db:
+        name: wordpress
+        state: present
+
+
+
+
+
     # Перевірка та зміна пароля для root в MySQL
     - name: Secure MySQL Installation
       shell: |
