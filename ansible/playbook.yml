@@ -90,14 +90,7 @@
         name: mysql
         state: restarted
 
-    # Тест доступу до MySQL
-    - name: Test MySQL connection with root
-      shell: |
-        mysql -u root -p{{ mysql_root_password }} -e "SHOW DATABASES;"
-      register: mysql_test_output
-    - name: Debug MySQL test output
-      debug:
-        var: mysql_test_output
+    
 
     # Створення бази даних для WordPress
     - name: Create a MySQL Database for WordPress
