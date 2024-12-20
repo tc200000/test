@@ -63,23 +63,20 @@
         group: root
         mode: '0600'
 
-
-
-
-
     # Перевірка та зміна пароля для root в MySQL
     - name: Secure MySQL Installation
       shell: |
-        sudo mysql -e "UPDATE mysql.user SET authentication_string=PASSWORD('{{ mysql_root_password }}') WHERE User='root';"
+        sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '{{ mysql_root_password }}';"
         sudo mysql -e "DELETE FROM mysql.user WHERE User='';"
         sudo mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test_%';"
         sudo mysql -e "FLUSH PRIVILEGES;"
       vars:
         mysql_root_password: "strongpassword"
 
+    # Зміна способу автентифікації root на mysql_native_password
     - name: Change root authentication to mysql_native_password
       shell: |
-        sudo mysql -u root --skip-grant-tables -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH 'mysql_native_password' BY 'strongpassword';"
+        sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';"
         sudo mysql -e "FLUSH PRIVILEGES;"
       vars:
         mysql_root_password: "strongpassword"
@@ -89,8 +86,6 @@
       service:
         name: mysql
         state: restarted
-
-    
 
     # Створення бази даних для WordPress
     - name: Create a MySQL Database for WordPress
@@ -114,5 +109,3 @@
         login_password: "{{ mysql_root_password }}"
       vars:
         mysql_root_password: "strongpassword"
-
-
