@@ -100,7 +100,7 @@
         login_user: root
         login_password: "{{ mysql_root_password }}"
       vars:
-         mysql_root_password: "strongpassword"
+        mysql_root_password: "strongpassword"
 
     # Створення користувача для WordPress з доступом до бази даних
     - name: Create a MySQL User for WordPress
