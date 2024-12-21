@@ -20,6 +20,12 @@
           - php-curl
           - php-xml
           - php-zip
+          - php-mbstring
+          - php-gd
+          - php-soap
+          - php-intl
+          - php-bcmath
+          - php-json
         state: present
         update_cache: yes
 
@@ -110,29 +116,69 @@
       vars:
         mysql_root_password: "strongpassword"
 
-
-           # Завантаження WordPress
+    # Завантаження WordPress
     - name: Download WordPress
       get_url:
         url: https://wordpress.org/latest.tar.gz
         dest: /tmp/wordpress.tar.gz
 
-# Розпакування WordPress
+    # Розпакування WordPress
     - name: Extract WordPress
       unarchive:
         src: /tmp/wordpress.tar.gz
         dest: /var/www/
         remote_src: yes
 
-# Переміщення файлів WordPress у web-директорію
+    # Очищення попередньої установки WordPress
+    - name: Clear previous WordPress installation
+      file:
+        path: /var/www/html
+        state: absent
+
+    # Переміщення файлів WordPress у web-директорію
     - name: Move WordPress files
       command: mv /var/www/wordpress/* /var/www/html/
 
-# Встановлення правильних прав доступу
+    # Встановлення правильних прав доступу
     - name: Set permissions for WordPress files
       file:
         path: /var/www/html/
         owner: www-data
         group: www-data
+        mode: '0755'
         recurse: yes
-        state: directory
+
+    # Створення wp-config.php файлу
+    - name: Create wp-config.php
+      command: cp /var/www/html/wp-config-sample.php /var/www/html/wp-config.php
+
+    - name: Update wp-config.php for database connection
+      lineinfile:
+        path: /var/www/html/wp-config.php
+        regexp: "{{ item.regexp }}"
+        line: "{{ item.line }}"
+      with_items:
+        - { regexp: "DB_NAME', '.*'", line: "define('DB_NAME', 'wordpress');" }
+        - { regexp: "DB_USER', '.*'", line: "define('DB_USER', 'wp_user');" }
+        - { regexp: "DB_PASSWORD', '.*'", line: "define('DB_PASSWORD', 'wp_password');" }
+        - { regexp: "DB_HOST', '.*'", line: "define('DB_HOST', 'localhost');" }
+
+    # Налаштування Apache для WordPress
+    - name: Configure Apache for WordPress
+      copy:
+        dest: /etc/apache2/sites-available/wordpress.conf
+        content: |
+          <VirtualHost *:80>
+            DocumentRoot /var/www/html
+            <Directory /var/www/html>
+              AllowOverride All
+            </Directory>
+          </VirtualHost>
+
+    - name: Enable WordPress site and mod_rewrite
+      command: a2ensite wordpress && a2enmod rewrite
+
+    - name: Restart Apache
+      service:
+        name: apache2
+        state: restarted
