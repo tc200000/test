@@ -109,3 +109,30 @@
         login_password: "{{ mysql_root_password }}"
       vars:
         mysql_root_password: "strongpassword"
+
+
+           # Завантаження WordPress
+    - name: Download WordPress
+      get_url:
+        url: https://wordpress.org/latest.tar.gz
+        dest: /tmp/wordpress.tar.gz
+
+# Розпакування WordPress
+    - name: Extract WordPress
+      unarchive:
+        src: /tmp/wordpress.tar.gz
+        dest: /var/www/
+        remote_src: yes
+
+# Переміщення файлів WordPress у web-директорію
+    - name: Move WordPress files
+      command: mv /var/www/wordpress/* /var/www/html/
+
+# Встановлення правильних прав доступу
+    - name: Set permissions for WordPress files
+      file:
+        path: /var/www/html/
+        owner: www-data
+        group: www-data
+        recurse: yes
+        state: directory
