@@ -8,47 +8,58 @@ jobs:
     name: deploy EC2
     runs-on: ubuntu-latest
 
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    # 1. Завантаження репозиторію
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2. Налаштування AWS CLI (замість передачі ключів вручну)
+    - name: Set up AWS CLI
+      uses: aws-actions/configure-aws-credentials@v3
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-central-1
+
+   
+    # 5. Встановлення Terraform
+    - name: Install Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.5.7
+
+    # 6. Ініціалізація Terraform
+    - name: Terraform Init
+      run: terraform init
+
+    # 7. Застосування Terraform
+    - name: Terraform Apply
+      id: apply
+      run: |
+        terraform apply -auto-approve -var "ami_id=ami-0629230e074c580f2"
+
+    # 8. Виведення IP-адреси
+    - name: Get Public IP
+      run: |
+        PUBLIC_IP=$(terraform output -raw public_ip)
+        echo "Instance Public IP: $PUBLIC_IP"
+        echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
+
+    # 9. Видалення інстанса
+#    - name: Terraform Destroy
+#      if: always()
+#      run: |
+#        terraform destroy -auto-approve -var "ami_id=ami-0629230e074c580f2"
 
 
 
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v2
-        with:
-          terraform_version: 1.5.7
-
-      - name: Terraform Init
-        run: terraform init
-
-      - name: Terraform Apply
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-        AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-      run: terraform apply -auto-approve -var "aws_access_key=${{ secrets.AWS_ACCESS_KEY }}" -var "aws_secret_key=${{ secrets.AWS_SECRET_KEY }}" -var "ami_id=<AMI_ID>"
-
-      - name: Terraform Destroy
-        if: always()
-        env:
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
-        run: terraform destroy -auto-approve -var "aws_access_key=${{ secrets.AWS_ACCESS_KEY }}" -var "aws_secret_key=${{ secrets.AWS_SECRET_KEY }}" -var "ami_id=<AMI_ID>"
 
 
 
 
-     
 
-
-
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v3
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-central-1
-
+      
       
 
       
