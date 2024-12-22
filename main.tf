@@ -19,7 +19,7 @@ resource "aws_instance" "myec2" {
  tags = {
    name = "Demo System"
  }
-
+}
 
 # Виведення публічної IP-адреси
 output "public_ip" {
@@ -36,4 +36,3 @@ output "private_ip" {
 
 
 
-}
