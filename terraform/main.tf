@@ -20,17 +20,20 @@ resource "aws_instance" "myec2" {
    name = "Demo System"
  }
 
+
 # Виведення публічної IP-адреси
 output "public_ip" {
-  value = aws_instance.apache2_instance.public_ip
+  value       = aws_instance.myec2.public_ip
   description = "Public IP address of the created instance"
 }
 
 # Виведення приватної IP-адреси
 output "private_ip" {
-  value = aws_instance.apache2_instance.private_ip
+  value       = aws_instance.myec2.private_ip
   description = "Private IP address of the created instance"
 }
+
+
 
 
 }
