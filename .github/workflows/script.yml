@@ -33,24 +33,17 @@ jobs:
     - name: Terraform Init
       run: terraform init
 
-    # 7. Застосування Terraform
+     # 5. Застосування Terraform
     - name: Terraform Apply
       id: apply
-      run: |
-        terraform apply -auto-approve -var "ami_id=ami-0629230e074c580f2"
+      run: terraform apply -auto-approve
 
-    # 8. Виведення IP-адреси
+    # 6. Виведення IP-адреси
     - name: Get Public IP
       run: |
         PUBLIC_IP=$(terraform output -raw public_ip)
         echo "Instance Public IP: $PUBLIC_IP"
         echo "PUBLIC_IP=$PUBLIC_IP" >> $GITHUB_ENV
-
-    # 9. Видалення інстанса
-#    - name: Terraform Destroy
-#      if: always()
-#      run: |
-#        terraform destroy -auto-approve -var "ami_id=ami-0629230e074c580f2"
 
 
 
