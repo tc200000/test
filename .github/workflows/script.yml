@@ -1,16 +1,21 @@
-name: Script
+name: deploy ec2 instance
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    name: Build AMI and Notify
+  deploy-instance:
+    name: deploy EC2
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+
+     
+
+
 
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v3
