@@ -13,7 +13,7 @@ provider "aws" {
 }
 
 resource "aws_instance" "myec2" {
- ami = "ami-067e8d934c362b31e"
+ ami = "ami-04c522ee4750da4dc"
  instance_type = "t2.micro"
  vpc_security_group_ids = ["sg-09c59443e4e37de04"]
  tags = {
