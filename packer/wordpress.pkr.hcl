@@ -45,14 +45,13 @@ build {
       "sudo add-apt-repository universe -y",
 
       "sudo apt-get update -y",
-      "sudo apt-get upgrade -y"
+      "sudo apt-get upgrade -y",
+     
+      "sudo apt-get install -y apache2",
+      "echo 'Hello World' | sudo tee /var/www/html/index.html",
+      "sudo systemctl enable apache2"
     ]
   }
-  provisioner "ansible" {
-    playbook_file = "../ansible/playbook.yml"
-    extra_arguments = ["--extra-vars", "ansible_python_interpreter=/usr/bin/python3"]
- 
-    }
 }
 
 
