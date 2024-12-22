@@ -1,27 +1,66 @@
-name: Run Script on Push
+name: Script
 
 on:
   workflow_dispatch:
 
 jobs:
-  run-script:
+  build:
+    name: Build AMI and Notify
     runs-on: ubuntu-latest
 
     steps:
-
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
-        
-      - name: Run Inline Bash Script
+
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Initialize Packer plugins
+        id: packer_init
         run: |
-          echo "Starting the script..."
-          
-          # Отримати ім'я поточної гілки
-          BRANCH_NAME=$(git rev-parse --abbrev-ref HEAD)
-          echo "Branch: $BRANCH_NAME"
-          
-          # Перевірка дати
-          CURRENT_DATE=$(date)
-          echo "Current date is: $CURRENT_DATE"
-          
-          echo "Script finished!"
+          cd packer
+          packer init wordpress.pkr.hcl
+        continue-on-error: true
+
+      - name: Build AMI using Packer
+        id: packer_build
+        run: |
+          cd packer
+          packer build wordpress.pkr.hcl
+        continue-on-error: true
+
+      - name: Collect status
+        id: collect_status
+        run: |
+          echo "PACKER_INIT_STATUS=$([[ '${{ steps.packer_init.outcome }}' == 'success' ]] && echo '✔ Success' || echo '✗ Failure')" >> $GITHUB_ENV
+          echo "PACKER_BUILD_STATUS=$([[ '${{ steps.packer_build.outcome }}' == 'success' ]] && echo '✔ Success' || echo '✗ Failure')" >> $GITHUB_ENV
+          if [[ '${{ steps.packer_init.outcome }}' != 'success' ]]; then
+            echo "PACKER_INIT_ERROR=$(cat packer/init.log)" >> $GITHUB_ENV
+          fi
+          if [[ '${{ steps.packer_build.outcome }}' != 'success' ]]; then
+            echo "PACKER_BUILD_ERROR=$(cat packer/build.log)" >> $GITHUB_ENV
+          fi
+
+      - name: Send Telegram notification
+        if: always()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MESSAGE="*GitHub Actions CI Results*:
+          *Packer Init*: $PACKER_INIT_STATUS
+          *Packer Build*: $PACKER_BUILD_STATUS"
+          if [[ "$PACKER_INIT_STATUS" == "✗ Failure" ]]; then
+            MESSAGE="$MESSAGE\n\n*Packer Init Error*: \n$PACKER_INIT_ERROR"
+          fi
+          if [[ "$PACKER_BUILD_STATUS" == "✗ Failure" ]]; then
+            MESSAGE="$MESSAGE\n\n*Packer Build Error*: \n$PACKER_BUILD_ERROR"
+          fi
+          curl -s -X POST https://api.telegram.org/bot${{ env.TELEGRAM_BOT_TOKEN }}/sendMessage \
+            -d chat_id=${{ env.TELEGRAM_CHAT_ID }} \
+            -d parse_mode=Markdown \
+            -d text="$MESSAGE"
