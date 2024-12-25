@@ -46,6 +46,6 @@ jobs:
   #     run: sleep 60 # Зачекати 60 секунд для тестування (можна налаштувати)
 
       # 7. Видалення ресурсів (знищення VPS)
-      - name: Terraform Destroy
-        if: always() # Виконати навіть якщо попередні кроки завершились помилкою
-        run: terraform destroy -auto-approve
+   #   - name: Terraform Destroy
+   #     if: always() # Виконати навіть якщо попередні кроки завершились помилкою
+   #     run: terraform destroy -auto-approve
