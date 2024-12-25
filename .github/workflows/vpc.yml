@@ -30,14 +30,14 @@ jobs:
       # 4. Ініціалізація Terraform
       - name: Terraform Init
         run: |
-          cd terraform/ec2
+          cd terraform/vpc
           terraform init
 
       # 5. Застосування Terraform (створення ресурсів)
       - name: Terraform Apply
         id: apply
         run:  |
-          cd terraform/ec2
+          cd terraform/vpc
           terraform apply -auto-approve
 
       # 6. Очікування для тестування ресурсів (необов'язково)
