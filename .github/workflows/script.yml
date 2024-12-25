@@ -31,12 +31,16 @@ jobs:
 
     # 6. Ініціалізація Terraform
     - name: Terraform Init
-      run: terraform init
+      run: |
+        cd terraform/vps
+        terraform init
 
      # 5. Застосування Terraform
     - name: Terraform Apply
       id: apply
-      run: terraform apply -auto-approve
+      run: |
+        cd terraform/vps
+        terraform apply -auto-approve
 
 
 
