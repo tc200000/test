@@ -37,9 +37,9 @@ jobs:
         run: terraform apply -auto-approve
 
       # 6. Очікування для тестування ресурсів (необов'язково)
-      - name: Wait for Testing
-        if: always()
-        run: sleep 60 # Зачекати 60 секунд для тестування (можна налаштувати)
+  #   - name: Wait for Testing
+  #     if: always()
+  #     run: sleep 60 # Зачекати 60 секунд для тестування (можна налаштувати)
 
       # 7. Видалення ресурсів (знищення VPS)
       - name: Terraform Destroy
