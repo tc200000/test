@@ -43,7 +43,7 @@ jobs:
 # 7. Видалення інстансу
     - name: Terraform Destroy
       if: always() # Виконується навіть якщо попередні кроки завершились з помилкою
-      run: terraform destroy -auto-approve
+      run: terraform destroy -auto-approve -target=aws_instance.myec2
 
 
 
