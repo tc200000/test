@@ -29,7 +29,9 @@ jobs:
 
       # 4. Ініціалізація Terraform
       - name: Terraform Init
-        run: terraform init
+        run: |
+          cd terraform/ec2
+          terraform init
 
       # 5. Застосування Terraform (створення ресурсів)
       - name: Terraform Apply
