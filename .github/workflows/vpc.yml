@@ -36,7 +36,9 @@ jobs:
       # 5. Застосування Terraform (створення ресурсів)
       - name: Terraform Apply
         id: apply
-        run: terraform apply -auto-approve
+        run:  |
+          cd terraform/ec2
+          terraform apply -auto-approve
 
       # 6. Очікування для тестування ресурсів (необов'язково)
   #   - name: Wait for Testing
