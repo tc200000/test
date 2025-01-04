@@ -38,28 +38,28 @@ resource "aws_security_group" "ssh_access" {
 
 
 resource "aws_instance" "instance_1" {
-  ami                         = "ami-00123af0ec3011bb6" #використай свою AMI
+  ami                         = "ami-0bd77c19efc3ffadf" #використай свою AMI
   instance_type               = "t2.micro"
-  key_name                    = "KOWO"
-  subnet_id                   = "subnet-006eb1192e5d4d227" #використай свою
+  key_name                    = "testt"
+  subnet_id                   = "ami-0bd77c19efc3ffadf" #використай свою
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
   tags = {
     Name = "Instance-Public"
-    VPC  = "vpc-0eef2ec14ebe1efcf" #використай свою
+    VPC  = "vpc-03fbe6190ee4199fe" #використай свою
   }
 }
 
 resource "aws_instance" "instance_2" {
-  ami                    = "ami-00123af0ec3011bb6" #використай свою AMI
+  ami                    = "ami-0bd77c19efc3ffadf" #використай свою AMI
   instance_type          = "t2.micro"
   key_name               = "KOWO"
-  subnet_id              = "subnet-0ff01cc21320857e7" #використай свою
+  subnet_id              = "subnet-08f69270b5963e47c" #використай свою
   vpc_security_group_ids = [aws_security_group.ssh_access.id]
 
   tags = {
     Name = "Instance-Privat"
-    VPC  = "vpc-0eef2ec14ebe1efcf" #використай свою
+    VPC  = "vpc-03fbe6190ee4199fe" #використай свою
   }
 }
