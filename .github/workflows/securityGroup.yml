@@ -30,7 +30,7 @@ jobs:
       # 4. Ініціалізація Terraform
       - name: Terraform Init
         run: |
-          cd terraform/secutityGroup
+          cd terraform/securityGroup
           terraform init
 
       # 5. Застосування Terraform (створення ресурсів)
