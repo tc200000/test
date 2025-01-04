@@ -54,7 +54,7 @@ resource "aws_instance" "instance_1" {
 resource "aws_instance" "instance_2" {
   ami                    = "ami-0bd77c19efc3ffadf" #використай свою AMI
   instance_type          = "t2.micro"
-  key_name               = "KOWO"
+  key_name               = "testt"
   subnet_id              = "subnet-08f69270b5963e47c" #використай свою 
   vpc_security_group_ids = [aws_security_group.ssh_access.id]
 
