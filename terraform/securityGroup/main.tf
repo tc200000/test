@@ -15,7 +15,7 @@ provider "aws" {
 resource "aws_security_group" "ssh_access" {
   name        = "ssh-access-sg"
   description = "Allow SSH access to EC2 instances"
-  vpc_id      = "vpc-05b2ac2c82cd028bc"
+  vpc_id      = "vpc-03fbe6190ee4199fe"
 
   ingress {
     from_port   = 22
