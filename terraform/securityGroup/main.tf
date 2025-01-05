@@ -15,7 +15,7 @@ provider "aws" {
 resource "aws_security_group" "ssh_access" {
   name        = "ssh-access-sg"
   description = "Allow SSH access to EC2 instances"
-  vpc_id      = "vpc-03fbe6190ee4199fe"
+  vpc_id      = "vpc-05a7241fa0102451a"
 
   ingress {
     from_port   = 22
@@ -38,28 +38,28 @@ resource "aws_security_group" "ssh_access" {
 
 
 resource "aws_instance" "instance_1" {
-  ami                         = "ami-0bd77c19efc3ffadf" #використай свою AMI
+  ami                         = "ami-0c30057a68c2aeddb" #використай свою AMI
   instance_type               = "t2.micro"
   key_name                    = "testt"
-  subnet_id                   = "subnet-0ec8c0913d81b7307" #використай свою
+  subnet_id                   = "subnet-0128ae2179f032b24" #використай свою
   vpc_security_group_ids      = [aws_security_group.ssh_access.id]
   associate_public_ip_address = true
 
   tags = {
     Name = "Instance-Public"
-    VPC  = "vpc-03fbe6190ee4199fe" #використай свою
+    VPC  = "vpc-05a7241fa0102451a" #використай свою
   }
 }
 
 resource "aws_instance" "instance_2" {
-  ami                    = "ami-0bd77c19efc3ffadf" #використай свою AMI
+  ami                    = "ami-0c30057a68c2aeddb" #використай свою AMI
   instance_type          = "t2.micro"
   key_name               = "testt"
-  subnet_id              = "subnet-08f69270b5963e47c" #використай свою 
+  subnet_id              = "subnet-036b1511c868456e4" #використай свою 
   vpc_security_group_ids = [aws_security_group.ssh_access.id]
 
   tags = {
     Name = "Instance-Privat"
-    VPC  = "vpc-03fbe6190ee4199fe" #використай свою
+    VPC  = "vpc-05a7241fa0102451a" #використай свою
   }
 }
