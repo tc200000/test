@@ -1,0 +1,10 @@
+
+SELECT 
+  streets.name, 
+    COUNT(house.id) 
+FROM house
+JOIN streets ON house.street = streets.id
+  GROUP BY 
+streets.name 
+ORDER BY COUNT(id) DESC
+LIMIT 1;
