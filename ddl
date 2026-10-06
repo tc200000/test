@@ -32,6 +32,7 @@ name VARCHAR(30));
 CREATE TABLE rating (
 id INTEGER PRIMARY KEY AUTO_INCREMENT NOT NULL,
 passenger_id INTEGER NOT NULL,
+INDEX idx_rating_passenger_id (passenger_id),
 score INTEGER NOT NULL,
 FOREIGN KEY (passenger_id) REFERENCES passenger(id));
 
